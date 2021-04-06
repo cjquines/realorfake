@@ -9,7 +9,18 @@ def main():
     sys.stdin = TextIOWrapper(sys.stdin.detach(), encoding="utf8")
     sys.stdout = TextIOWrapper(sys.stdout.detach(), encoding="utf8")
 
-    request = json.load(sys.stdin)
+    print("Access-Control-Allow-Origin: http://localhost:3000")
+    print("Access-Control-Allow-Headers: Content-Type")
+    print("Access-Control-Allow-Methods: POST,OPTIONS")
+    print("Access-Control-Allow-Credentials: true")
+
+    try:
+        request = json.load(sys.stdin)
+    except Exception as e:
+        print("Content-Type: application/json")
+        print()
+        print(json.dumps({"status": "error"}))
+        sys.exit(0)
 
     print("Content-Type: application/json")
     print()

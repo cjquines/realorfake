@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://esp.scripts.mit.edu:444/realorfake/",
   "dependencies": {
+    "axios": "^0.21.1",
     "node-sass": "^4.14.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
