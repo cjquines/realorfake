@@ -1,7 +1,12 @@
+import csv
 import sqlite3
 
-REAL_COLS = ["rowid", "name", "program", "url", "guesses", "correct"]
-FAKE_COLS = ["rowid", "name", "source", "guesses", "correct", "requests"]
+# picks = number of times it has been picked as question
+# guesses = number of times it has been guessed on (not always equal to picks)
+# correct = number of times it was correctly identified
+
+REAL_COLS = ["rowid", "name", "program", "url", "picks", "guesses", "correct"]
+FAKE_COLS = ["rowid", "name", "source", "picks", "guesses", "correct", "upvotes"]
 
 
 def wrap_cursor(f):
@@ -18,32 +23,50 @@ def wrap_cursor(f):
 def create_table(cur):
     cur.execute(
         """CREATE TABLE real_classes (
-            name text, program text, url text, guesses int, correct int
+            name text,
+            program text,
+            url text,
+            picks int,
+            guesses int,
+            correct int
         )"""
     )
     cur.execute(
         """CREATE TABLE fake_classes (
-            name text, source text, guesses int, correct int, requests int
+            name text,
+            source text,
+            picks int,
+            guesses int,
+            correct int,
+            requests int
         )"""
     )
 
 
 @wrap_cursor
-def insert_real_classes(cur, classes):
-    cur.executemany("INSERT INTO real_classes VALUES (?, ?, ?, 0, 0)", classes)
+def insert_real_class(cur, data):
+    cur.execute("INSERT INTO real_classes VALUES (?, ?, ?, 0, 0, 0)", data)
 
 
 @wrap_cursor
-def insert_fake_classes(cur, classes):
-    cur.executemany("INSERT INTO fake_classes VALUES (?, ?, 0, 0, 0)", classes)
+def insert_fake_class(cur, data):
+    cur.execute("INSERT INTO fake_classes VALUES (?, ?, 0, 0, 0, 0)", data)
 
 
 @wrap_cursor
 def get_class_pair(cur):
-    cur.execute("SELECT rowid, * FROM real_classes ORDER BY guesses LIMIT 1")
+    cur.execute("SELECT rowid, * FROM real_classes ORDER BY picks LIMIT 1")
     real_class = {a: b for a, b in zip(REAL_COLS, cur.fetchone())}
-    cur.execute("SELECT rowid, * FROM fake_classes ORDER BY guesses LIMIT 1")
+    cur.execute("SELECT rowid, * FROM fake_classes ORDER BY picks LIMIT 1")
     fake_class = {a: b for a, b in zip(FAKE_COLS, cur.fetchone())}
+    cur.execute(
+        """UPDATE real_classes SET picks = picks + 1 WHERE rowid = ?""",
+        (real_class["rowid"],),
+    )
+    cur.execute(
+        """UPDATE fake_classes SET picks = picks + 1 WHERE rowid = ?""",
+        (fake_class["rowid"],),
+    )
     return real_class, fake_class
 
 
@@ -75,5 +98,13 @@ def update_fake_request(cur, rowid):
 
 
 if __name__ == "__main__":
-    create_table()
-    
+    # create_table()
+    # with open("../data/realclasses.tsv") as f:
+    #     reader = csv.reader(f, delimiter="\t")
+    #     for row in reader:
+    #         insert_real_class(row)
+    # with open("../data/fakeclasses.tsv") as f:
+    #     reader = csv.reader(f, delimiter="\t")
+    #     for row in reader:
+    #         insert_fake_class(row)
+    print(get_class_pair())
