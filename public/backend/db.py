@@ -71,25 +71,21 @@ def get_class_pair(cur):
 
 
 @wrap_cursor
-def update_real_guess(cur, rowid, correct):
+def update_guess(cur, real_rowid, fake_rowid, correct):
     cur.execute(
         """UPDATE real_classes
         SET guesses = guesses + 1, correct = correct + ? WHERE rowid = ?""",
-        (int(correct), rowid),
+        (int(correct), real_rowid),
     )
-
-
-@wrap_cursor
-def update_fake_guess(cur, rowid, correct):
     cur.execute(
         """UPDATE fake_classes
         SET guesses = guesses + 1, correct = correct + ? WHERE rowid = ?""",
-        (int(correct), rowid),
+        (int(correct), fake_rowid),
     )
 
 
 @wrap_cursor
-def update_fake_upvote(cur, rowid):
+def update_upvote(cur, rowid):
     cur.execute(
         """UPDATE fake_classes
         SET upvotes = upvotes + 1 WHERE rowid = ?""",
