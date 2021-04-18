@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+real:
+    class name / parent program / url / guesses / correct guesses
+fake:
+    class name / guesses / correct guesses
+"""
+
+
 import sys
 import json
 from io import TextIOWrapper
@@ -21,6 +29,8 @@ def main():
         print()
         print(json.dumps({"status": "error"}))
         sys.exit(0)
+
+    # request.get("type", None)
 
     print("Content-Type: application/json")
     print()
