@@ -38,7 +38,7 @@ def create_table(cur):
             picks int,
             guesses int,
             correct int,
-            requests int
+            upvotes int
         )"""
     )
 
@@ -89,22 +89,21 @@ def update_fake_guess(cur, rowid, correct):
 
 
 @wrap_cursor
-def update_fake_request(cur, rowid):
+def update_fake_upvote(cur, rowid):
     cur.execute(
         """UPDATE fake_classes
-        SET requests = requests + 1 WHERE rowid = ?""",
+        SET upvotes = upvotes + 1 WHERE rowid = ?""",
         (rowid,),
     )
 
 
 if __name__ == "__main__":
-    # create_table()
-    # with open("../data/realclasses.tsv") as f:
-    #     reader = csv.reader(f, delimiter="\t")
-    #     for row in reader:
-    #         insert_real_class(row)
-    # with open("../data/fakeclasses.tsv") as f:
-    #     reader = csv.reader(f, delimiter="\t")
-    #     for row in reader:
-    #         insert_fake_class(row)
-    print(get_class_pair())
+    create_table()
+    with open("../data/realclasses.tsv") as f:
+        reader = csv.reader(f, delimiter="\t")
+        for row in reader:
+            insert_real_class(row)
+    with open("../data/fakeclasses.tsv") as f:
+        reader = csv.reader(f, delimiter="\t")
+        for row in reader:
+            insert_fake_class(row)

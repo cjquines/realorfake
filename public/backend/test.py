@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 
-"""
-real:
-    class name / parent program / url / guesses / correct guesses
-fake:
-    class name / guesses / correct guesses
-"""
-
-
+from db import get_class_pair, update_real_guess, update_fake_guess, update_fake_upvote
+from io import TextIOWrapper
 import sys
 import json
-from io import TextIOWrapper
 
 
 def main():
+    print(get_class_pair())
     sys.stdin = TextIOWrapper(sys.stdin.detach(), encoding="utf8")
     sys.stdout = TextIOWrapper(sys.stdout.detach(), encoding="utf8")
 
