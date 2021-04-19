@@ -17,7 +17,13 @@ const post = async (type, message, callback) => {
 const ClassBtn = ({ data, status, guess, real }) => {
   return (
     <button
-      className={status ? "green" : ""}
+      // className={status ? "green" : ""}
+      className={`
+        block flex-1 p-3 sm:p-4
+        border-2 hover:border-green-500
+        text-xl text-left hover:text-green-800
+        hover:bg-green-50
+      `}
       disabled={!guess}
       onClick={(e) => guess(real)}
     >
@@ -28,7 +34,12 @@ const ClassBtn = ({ data, status, guess, real }) => {
 
 const Pair = ({ real, fake, status, guess }) => {
   return (
-    <div className="pair">
+    <div
+      className={`
+        flex flex-col sm:flex-row
+        space-y-2 sm:space-x-2 sm:space-y-0
+      `}
+    >
       <ClassBtn data={real} status={status} guess={guess} real={true} />
       <ClassBtn data={fake} status={status} guess={guess} real={false} />
     </div>
@@ -67,7 +78,10 @@ const Prompt = ({ pending, real, fake, pushHistory }) => {
 
 const History = ({ history }) => {
   return (
-    <div className="history">
+    <div className={`
+      flex flex-col-reverse
+      space-y-4 space-y-reverse
+    `}>
       {history.map(({ real, fake }, i) => (
         <Pair key={i} real={real} fake={fake} />
       ))}
@@ -94,17 +108,21 @@ const App = () => {
   };
 
   return (
-    <div className="app">
-      <div className="header">
-        <h1>Real or Fake?</h1>
+    <div className="bg-white min-h-screen">
+      <div className="max-w-xl mx-auto py-6 px-4">
+        <div className="header">
+          <h1 className="text-3xl text-center pb-4 border-b-2 mb-4">
+            Real or Fake?
+          </h1>
+        </div>
+        <Prompt
+          pending={pending}
+          real={real}
+          fake={fake}
+          pushHistory={pushHistory}
+        />
+        <History history={history} />
       </div>
-      <Prompt
-        pending={pending}
-        real={real}
-        fake={fake}
-        pushHistory={pushHistory}
-      />
-      <History history={history} />
     </div>
   );
 };
