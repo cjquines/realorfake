@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.scss";
 
-const url = "http://cjq.scripts.mit.edu/backend/api.py";
+const url =
+  process.env.NODE_ENV === "production"
+    ? "backend/api.py"
+    : "http://cjq.scripts.mit.edu/backend/api.py";
 
 const percent = (num, denom) =>
   `${denom ? Math.floor((100 * num) / denom) : 0}%`;
@@ -41,7 +44,7 @@ const ClassBtn = ({ data, status, guess, real }) => {
         border-b-2 md:border-b-0 text-left
         ${bg === "green" ? "bg-green-50" : ""}
         ${bg === "red" ? "bg-red-50" : ""}
-        ${status ? "" : "hover:text-green-800 hover:bg-green-50"}
+        ${status ? "" : "hover:bg-gray-50"}
       `}
       disabled={!guess}
       onClick={guess && ((e) => guess(real))}
@@ -139,21 +142,25 @@ const History = ({ history }) => {
 };
 
 const App = () => {
-  const [pending, setPending] = useState(true);
-  const [classes, setClasses] = useState({});
-  const [history, setHistory] = useState([]);
+  const [seen, setSeen] = useState(0);
+  const [state, setState] = useState({
+    pending: true,
+    classes: {},
+    history: [],
+  });
 
   useEffect(() => {
     post("get", {}, (classes) => {
       classes.real_first = Math.random() > 0.5;
-      setClasses(classes);
-      setPending(false);
+      setState((state) => ({
+        pending: false,
+        history: !state.pending ? state.history.concat(state.classes) : [],
+        classes,
+      }));
     });
-  }, [history.length]);
+  }, [seen]);
 
-  const pushHistory = () => {
-    setHistory(history.concat(classes));
-  };
+  const pushHistory = () => setSeen((seen) => seen + 1);
 
   return (
     <div className="bg-gray-100 min-h-screen font-body">
@@ -161,10 +168,10 @@ const App = () => {
         Real or Fake?
       </h1>
       <div className="bg-white">
-        <Prompt pending={pending} classes={classes} pushHistory={pushHistory} />
+        <Prompt pending={state.pending} classes={state.classes} pushHistory={pushHistory} />
       </div>
       <div className="max-w-3xl mx-auto">
-        <History history={history} />
+        <History history={state.history} />
       </div>
     </div>
   );
