@@ -11,41 +11,54 @@ const post = async (type, message, callback) => {
     { withCredentials: true }
   );
   const { status, payload } = result.data;
-  if (status === "success") callback(payload);
+  if (status === "success" && callback) callback(payload);
 };
 
-const Pair = ({ real, fake, pushHistory }) => {
-  const [correct, setCorrect] = useState(false);
+const ClassBtn = ({ data, status, guess, real }) => {
+  return (
+    <button
+      className={status ? "green" : ""}
+      disabled={!guess}
+      onClick={(e) => guess(real)}
+    >
+      {data.name}
+    </button>
+  );
+};
 
-  useEffect(() => {
-    setCorrect(false);
-  }, [real, fake]);
-
-  const guess = (right) => {
-    setCorrect(true);
-    pushHistory();
-  };
-
+const Pair = ({ real, fake, status, guess }) => {
   return (
     <div className="pair">
-      <button className={correct ? "green" : ""} onClick={(e) => guess(true)}>
-        {real?.name}
-      </button>
-      <button className={correct ? "green" : ""} onClick={(e) => guess(false)}>
-        {fake?.name}
-      </button>
+      <ClassBtn data={real} status={status} guess={guess} real={true} />
+      <ClassBtn data={fake} status={status} guess={guess} real={false} />
     </div>
   );
 };
 
 const Prompt = ({ pending, real, fake, pushHistory }) => {
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    setStatus(false);
+  }, [real, fake]);
+
+  const guess = (correct) => {
+    setStatus(true);
+    pushHistory();
+    post("guess", {
+      real_rowid: real.rowid,
+      fake_rowid: fake.rowid,
+      correct,
+    });
+  };
+
   return (
     <div className="prompt">
       <h2>Choose the real ESP class!</h2>
-      {pending && real && fake ? (
-        <div className="pair">loading</div>
+      {pending ? (
+        <div className="pair">Loading…</div>
       ) : (
-        <Pair real={real} fake={fake} pushHistory={pushHistory} />
+        <Pair real={real} fake={fake} status={status} guess={guess} />
       )}
       <p>Score: something</p>
     </div>
