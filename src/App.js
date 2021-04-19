@@ -15,20 +15,25 @@ const post = async (type, message, callback) => {
 };
 
 const ClassBtn = ({ data, status, guess, real }) => {
+  const source = <p className="uppercase tracking-widest text-sm mb-1">{data.source || data.program}</p>;
+  const stats = <p className="text-sm text-gray-500 mt-5">{data.guesses} out of {data.correct} people (100%) guessed this correctly</p>;
+
   return (
-    <button
+    <div
       // className={status ? "green" : ""}
       className={`
-        block flex-1 p-3 sm:p-4
-        border-2 hover:border-green-500
-        text-xl text-left hover:text-green-800
+        flex flex-col justify-center flex-1 p-4
+        border-b-2 md:border-b-0
+        text-left hover:text-green-800
         hover:bg-green-50
       `}
       disabled={!guess}
       onClick={(e) => guess(real)}
     >
-      {data.name}
-    </button>
+      {guess ? null : source}
+      <p className="font-display text-2xl leading-tight">{data.name}</p>
+      {guess ? null : stats}
+    </div>
   );
 };
 
@@ -36,8 +41,7 @@ const Pair = ({ real, fake, status, guess }) => {
   return (
     <div
       className={`
-        flex flex-col sm:flex-row
-        space-y-2 sm:space-x-2 sm:space-y-0
+        flex flex-col md:flex-row h-60 md:h-48
       `}
     >
       <ClassBtn data={real} status={status} guess={guess} real={true} />
@@ -64,14 +68,16 @@ const Prompt = ({ pending, real, fake, pushHistory }) => {
   };
 
   return (
-    <div className="prompt">
-      <h2>Choose the real ESP class!</h2>
+    <div className="max-w-3xl mx-auto md:pt-6">
       {pending ? (
-        <div className="pair">Loading…</div>
+        <div>Loading…</div>
       ) : (
         <Pair real={real} fake={fake} status={status} guess={guess} />
       )}
-      <p>Score: something</p>
+      <div className="flex flex-col sm:flex-row p-4 sm:p-0 mt-2 text-gray-600">
+        <p className="flex-1 p-0 pb-1 sm:p-4">Which one is the real ESP class?</p>
+        <p className="flex-1 p-0 sm:p-4"><span className="emph">3</span> correct out of <span className="emph">4</span> guesses <span className="emph">(75%)</span></p>
+      </div>
     </div>
   );
 };
@@ -80,7 +86,7 @@ const History = ({ history }) => {
   return (
     <div className={`
       flex flex-col-reverse
-      space-y-4 space-y-reverse
+      space-y-5 space-y-reverse
     `}>
       {history.map(({ real, fake }, i) => (
         <Pair key={i} real={real} fake={fake} />
@@ -108,19 +114,19 @@ const App = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="max-w-xl mx-auto py-6 px-4">
-        <div className="header">
-          <h1 className="text-3xl text-center pb-4 border-b-2 mb-4">
-            Real or Fake?
-          </h1>
-        </div>
+    <div className="bg-gray-100 min-h-screen font-body">
+      <h1 className="bg-gray-900 text-gray-50 font-display text-xl text-center py-3">
+        Real or Fake?
+      </h1>
+      <div className="bg-white">
         <Prompt
           pending={pending}
           real={real}
           fake={fake}
           pushHistory={pushHistory}
         />
+      </div>
+      <div className="max-w-3xl mx-auto">
         <History history={history} />
       </div>
     </div>
