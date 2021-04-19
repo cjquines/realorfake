@@ -4,6 +4,9 @@ import "./App.scss";
 
 const url = "http://cjq.scripts.mit.edu/backend/api.py";
 
+const percent = (num, denom) =>
+  `${denom ? Math.floor((100 * num) / denom) : 0}%`;
+
 const post = async (type, message, callback) => {
   const result = await axios.post(
     url,
@@ -15,54 +18,86 @@ const post = async (type, message, callback) => {
 };
 
 const ClassBtn = ({ data, status, guess, real }) => {
-  const source = <p className="uppercase tracking-widest text-sm mb-1">{data.source || data.program}</p>;
-  const stats = <p className="text-sm text-gray-500 mt-5">{data.guesses} out of {data.correct} people (100%) guessed this correctly</p>;
+  const inHistory = !guess;
+  const bg = real
+    ? status === "correct" && "green"
+    : status === "wrong" && "red";
+  const source = data.program && (
+    <p className="uppercase tracking-widest text-sm mb-1">{data.program}</p>
+  );
+  const stats = (
+    <p className="text-sm text-gray-500 mt-5">
+      {data.correct + (status === "correct" ? 1 : 0)} out of {data.guesses + 1}{" "}
+      people (
+      {percent(data.correct + (status === "correct" ? 1 : 0), data.guesses + 1)}
+      ) guessed this correctly
+    </p>
+  );
 
   return (
     <div
-      // className={status ? "green" : ""}
       className={`
         flex flex-col justify-center flex-1 p-4
-        border-b-2 md:border-b-0
-        text-left hover:text-green-800
-        hover:bg-green-50
+        border-b-2 md:border-b-0 text-left
+        ${bg === "green" ? "bg-green-50" : ""}
+        ${bg === "red" ? "bg-red-50" : ""}
+        ${status ? "" : "hover:text-green-800 hover:bg-green-50"}
       `}
       disabled={!guess}
-      onClick={(e) => guess(real)}
+      onClick={guess && ((e) => guess(real))}
     >
-      {guess ? null : source}
+      {inHistory && source}
       <p className="font-display text-2xl leading-tight">{data.name}</p>
-      {guess ? null : stats}
+      {inHistory && stats}
     </div>
   );
 };
 
-const Pair = ({ real, fake, status, guess }) => {
+const Pair = ({ classes, guessed, guess }) => {
+  const btn = (real) => {
+    const key = real ? "real" : "fake";
+    return (
+      <ClassBtn
+        key={key}
+        data={classes[key]}
+        status={classes.status}
+        guess={guess}
+        real={real}
+      />
+    );
+  };
+  const classElt = classes.real_first
+    ? [btn(true), btn(false)]
+    : [btn(false), btn(true)];
   return (
     <div
       className={`
         flex flex-col md:flex-row h-60 md:h-48
       `}
     >
-      <ClassBtn data={real} status={status} guess={guess} real={true} />
-      <ClassBtn data={fake} status={status} guess={guess} real={false} />
+      {classElt}
     </div>
   );
 };
 
-const Prompt = ({ pending, real, fake, pushHistory }) => {
-  const [status, setStatus] = useState(null);
+const Prompt = ({ pending, classes, pushHistory }) => {
+  const [guessed, setGuessed] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [correct, setCorrect] = useState(0);
 
   useEffect(() => {
-    setStatus(false);
-  }, [real, fake]);
+    setGuessed(false);
+  }, [classes]);
 
   const guess = (correct) => {
-    setStatus(true);
+    classes.status = correct ? "correct" : "wrong";
+    setTotal((total) => total + 1);
+    setCorrect((correct_) => correct_ + correct);
+    setGuessed(true);
     pushHistory();
     post("guess", {
-      real_rowid: real.rowid,
-      fake_rowid: fake.rowid,
+      real_rowid: classes.real.rowid,
+      fake_rowid: classes.fake.rowid,
       correct,
     });
   };
@@ -72,11 +107,17 @@ const Prompt = ({ pending, real, fake, pushHistory }) => {
       {pending ? (
         <div>Loading…</div>
       ) : (
-        <Pair real={real} fake={fake} status={status} guess={guess} />
+        <Pair classes={classes} guessed={guessed} guess={guess} />
       )}
       <div className="flex flex-col sm:flex-row p-4 sm:p-0 mt-2 text-gray-600">
-        <p className="flex-1 p-0 pb-1 sm:p-4">Which one is the real ESP class?</p>
-        <p className="flex-1 p-0 sm:p-4"><span className="emph">3</span> correct out of <span className="emph">4</span> guesses <span className="emph">(75%)</span></p>
+        <p className="flex-1 p-0 pb-1 sm:p-4">
+          Which one is the real ESP class?
+        </p>
+        <p className="flex-1 p-0 sm:p-4">
+          <span className="emph">{correct}</span> correct out of{" "}
+          <span className="emph">{total}</span> guesses{" "}
+          <span className="emph">({percent(correct, total)})</span>
+        </p>
       </div>
     </div>
   );
@@ -84,12 +125,14 @@ const Prompt = ({ pending, real, fake, pushHistory }) => {
 
 const History = ({ history }) => {
   return (
-    <div className={`
+    <div
+      className={`
       flex flex-col-reverse
       space-y-5 space-y-reverse
-    `}>
-      {history.map(({ real, fake }, i) => (
-        <Pair key={i} real={real} fake={fake} />
+    `}
+    >
+      {history.map((classes, i) => (
+        <Pair key={i} classes={classes} />
       ))}
     </div>
   );
@@ -97,20 +140,19 @@ const History = ({ history }) => {
 
 const App = () => {
   const [pending, setPending] = useState(true);
-  const [real, setReal] = useState({});
-  const [fake, setFake] = useState({});
+  const [classes, setClasses] = useState({});
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    post("get", {}, ({ real, fake }) => {
-      setReal(real);
-      setFake(fake);
+    post("get", {}, (classes) => {
+      classes.real_first = Math.random() > 0.5;
+      setClasses(classes);
       setPending(false);
     });
   }, [history.length]);
 
   const pushHistory = () => {
-    setHistory(history.concat({ real, fake }));
+    setHistory(history.concat(classes));
   };
 
   return (
@@ -119,12 +161,7 @@ const App = () => {
         Real or Fake?
       </h1>
       <div className="bg-white">
-        <Prompt
-          pending={pending}
-          real={real}
-          fake={fake}
-          pushHistory={pushHistory}
-        />
+        <Prompt pending={pending} classes={classes} pushHistory={pushHistory} />
       </div>
       <div className="max-w-3xl mx-auto">
         <History history={history} />
