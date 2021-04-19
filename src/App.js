@@ -14,23 +14,38 @@ const post = async (type, message, callback) => {
   if (status === "success") callback(payload);
 };
 
-const Pair = ({ real, fake }) => {
+const Pair = ({ real, fake, pushHistory }) => {
+  const [correct, setCorrect] = useState(false);
+
+  useEffect(() => {
+    setCorrect(false);
+  }, [real, fake]);
+
+  const guess = (right) => {
+    setCorrect(true);
+    pushHistory();
+  };
+
   return (
     <div className="pair">
-      <p>{real.name}</p>
-      <p>{fake.name}</p>
+      <button className={correct ? "green" : ""} onClick={(e) => guess(true)}>
+        {real?.name}
+      </button>
+      <button className={correct ? "green" : ""} onClick={(e) => guess(false)}>
+        {fake?.name}
+      </button>
     </div>
   );
 };
 
-const Prompt = ({ pending, real, fake }) => {
+const Prompt = ({ pending, real, fake, pushHistory }) => {
   return (
     <div className="prompt">
       <h2>Choose the real ESP class!</h2>
-      {pending ? (
+      {pending && real && fake ? (
         <div className="pair">loading</div>
       ) : (
-        <Pair real={real} fake={fake} />
+        <Pair real={real} fake={fake} pushHistory={pushHistory} />
       )}
       <p>Score: something</p>
     </div>
@@ -40,7 +55,7 @@ const Prompt = ({ pending, real, fake }) => {
 const History = ({ history }) => {
   return (
     <div className="history">
-      {history.map((i, { real, fake }) => (
+      {history.map(({ real, fake }, i) => (
         <Pair key={i} real={real} fake={fake} />
       ))}
     </div>
@@ -54,7 +69,6 @@ const App = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    setPending(true);
     post("get", {}, ({ real, fake }) => {
       setReal(real);
       setFake(fake);
@@ -62,12 +76,21 @@ const App = () => {
     });
   }, [history.length]);
 
+  const pushHistory = () => {
+    setHistory(history.concat({ real, fake }));
+  };
+
   return (
     <div className="app">
       <div className="header">
         <h1>Real or Fake?</h1>
       </div>
-      <Prompt pending={pending} real={real} fake={fake} />
+      <Prompt
+        pending={pending}
+        real={real}
+        fake={fake}
+        pushHistory={pushHistory}
+      />
       <History history={history} />
     </div>
   );
