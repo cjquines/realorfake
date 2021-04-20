@@ -2,7 +2,7 @@
   "name": "realorfake",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://esp.scripts.mit.edu:444/realorfake/",
+  "homepage": "https://esp.scripts.mit.edu/realorfake/",
   "dependencies": {
     "@craco/craco": "^6.1.1",
     "@tailwindcss/postcss7-compat": "^2.1.0",
