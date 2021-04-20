@@ -26,7 +26,7 @@ const ClassBtn = ({ data, status, guess, real, first }) => {
     ? status === "correct" && "green"
     : status === "wrong" && "red";
   const source = data.program && (
-    <a className="uppercase tracking-widest text-sm mb-1">{data.program}</a>
+    <p className="uppercase tracking-widest text-sm mb-1">{data.program}</p>
   );
   const name =
     data.program && inHistory ? (
@@ -68,7 +68,7 @@ const ClassBtn = ({ data, status, guess, real, first }) => {
         ${!first ? "md:pl-4 md:pr-6" : ""}
         ${!inHistory && color === "green" ? "bg-green-100" : ""}
         ${!inHistory && color === "red" ? "bg-red-100" : ""}
-        ${status ? "" : "hover:bg-gray-100"}
+        ${!status ? "hover:bg-gray-100 cursor-pointer" : ""}
       `}
       disabled={!guess}
       onClick={guess && ((e) => guess(real))}
