@@ -7,9 +7,16 @@ module.exports = {
       body: ['"IBM Plex Sans"', "sans-serif"],
     },
     extend: {},
+    minHeight: {
+      48: "12rem",
+      60: "15rem",
+      screen: "100vh",
+    },
   },
   variants: {
-    extend: {},
+    extend: {
+      backgroundColor: ["even"],
+    },
   },
   plugins: [],
 };

@@ -20,14 +20,25 @@ const post = async (type, message, callback) => {
   if (status === "success" && callback) callback(payload);
 };
 
-const ClassBtn = ({ data, status, guess, real }) => {
+const ClassBtn = ({ data, status, guess, real, first }) => {
   const inHistory = !guess;
-  const bg = real
+  const color = real
     ? status === "correct" && "green"
     : status === "wrong" && "red";
   const source = data.program && (
-    <p className="uppercase tracking-widest text-sm mb-1">{data.program}</p>
+    <a className="uppercase tracking-widest text-sm mb-1">{data.program}</a>
   );
+  const name =
+    data.program && inHistory ? (
+      <a className={`
+        font-display text-2xl leading-tight
+        hover:underline
+      `} href={data.url}>
+        {data.name}
+      </a>
+    ) : (
+      <p className="font-display text-2xl leading-tight">{data.name}</p>
+    );
   const stats = (
     <p className="text-sm text-gray-500 mt-5">
       {data.correct + (status === "correct" ? 1 : 0)} out of {data.guesses + 1}{" "}
@@ -36,28 +47,42 @@ const ClassBtn = ({ data, status, guess, real }) => {
       ) guessed this correctly
     </p>
   );
+  const marker = (
+    <div
+      className={`
+      h-full absolute w-2 left-0
+      ${!first ? "md:left-auto md:right-0" : ""}
+      ${inHistory && color === "green" ? "bg-green-300" : ""}
+      ${inHistory && color === "red" ? "bg-red-300" : ""}
+      `}
+    ></div>
+  );
 
   return (
     <div
       className={`
-        flex flex-col justify-center flex-1 p-4
-        border-b-2 md:border-b-0 text-left
-        ${bg === "green" ? "bg-green-50" : ""}
-        ${bg === "red" ? "bg-red-50" : ""}
-        ${status ? "" : "hover:bg-gray-50"}
+        relative
+        flex flex-col justify-center flex-1 py-6 px-4 pl-6
+        border-b-2 text-left
+        ${!inHistory ? "md:border-b-0 select-none" : ""}
+        ${!first ? "md:pl-4 md:pr-6" : ""}
+        ${!inHistory && color === "green" ? "bg-green-100" : ""}
+        ${!inHistory && color === "red" ? "bg-red-100" : ""}
+        ${status ? "" : "hover:bg-gray-100"}
       `}
       disabled={!guess}
       onClick={guess && ((e) => guess(real))}
     >
       {inHistory && source}
-      <p className="font-display text-2xl leading-tight">{data.name}</p>
+      {name}
       {inHistory && stats}
+      {inHistory && marker}
     </div>
   );
 };
 
 const Pair = ({ classes, guessed, guess }) => {
-  const btn = (real) => {
+  const btn = (real, first) => {
     const key = real ? "real" : "fake";
     return (
       <ClassBtn
@@ -66,16 +91,18 @@ const Pair = ({ classes, guessed, guess }) => {
         status={classes.status}
         guess={guess}
         real={real}
+        first={first}
       />
     );
   };
   const classElt = classes.real_first
-    ? [btn(true), btn(false)]
-    : [btn(false), btn(true)];
+    ? [btn(true, true), btn(false, false)]
+    : [btn(false, true), btn(true, false)];
   return (
     <div
       className={`
-        flex flex-col md:flex-row h-60 md:h-48
+        flex flex-col md:flex-row min-h-60 md:min-h-48
+        even:bg-white md:even:bg-transparent
       `}
     >
       {classElt}
@@ -93,6 +120,7 @@ const Prompt = ({ pending, classes, pushHistory }) => {
   }, [classes]);
 
   const guess = (correct) => {
+    if (classes.status) return;
     classes.status = correct ? "correct" : "wrong";
     setTotal((total) => total + 1);
     setCorrect((correct_) => correct_ + correct);
@@ -108,7 +136,7 @@ const Prompt = ({ pending, classes, pushHistory }) => {
   return (
     <div className="max-w-3xl mx-auto md:pt-6">
       {pending ? (
-        <div>Loading…</div>
+        <div className="flex flex-col justify-center text-center min-h-60 md:min-h-48">Loading…</div>
       ) : (
         <Pair classes={classes} guessed={guessed} guess={guess} />
       )}
@@ -130,8 +158,7 @@ const History = ({ history }) => {
   return (
     <div
       className={`
-      flex flex-col-reverse
-      space-y-5 space-y-reverse
+      flex flex-col
     `}
     >
       {history.map((classes, i) => (
@@ -154,7 +181,7 @@ const App = () => {
       classes.real_first = Math.random() > 0.5;
       setState((state) => ({
         pending: false,
-        history: !state.pending ? state.history.concat(state.classes) : [],
+        history: !state.pending ? [state.classes].concat(state.history) : [],
         classes,
       }));
     });
@@ -168,7 +195,11 @@ const App = () => {
         Real or Fake?
       </h1>
       <div className="bg-white">
-        <Prompt pending={state.pending} classes={state.classes} pushHistory={pushHistory} />
+        <Prompt
+          pending={state.pending}
+          classes={state.classes}
+          pushHistory={pushHistory}
+        />
       </div>
       <div className="max-w-3xl mx-auto">
         <History history={state.history} />
