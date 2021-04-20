@@ -1,114 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./App.scss";
-
-const url =
-  process.env.NODE_ENV === "production"
-    ? "backend/api.py"
-    : "http://cjq.scripts.mit.edu/backend/api.py";
-
-const percent = (num, denom) =>
-  `${denom ? Math.floor((100 * num) / denom) : 0}%`;
-
-const post = async (type, message, callback) => {
-  const result = await axios.post(
-    url,
-    { ...message, type },
-    { withCredentials: true }
-  );
-  const { status, payload } = result.data;
-  if (status === "success" && callback) callback(payload);
-};
-
-const ClassBtn = ({ data, status, guess, real, first }) => {
-  const inHistory = !guess;
-  const color = real
-    ? status === "correct" && "green"
-    : status === "wrong" && "red";
-  const source = data.program && (
-    <p className="uppercase tracking-widest text-sm mb-1">{data.program}</p>
-  );
-  const name =
-    data.program && inHistory ? (
-      <a className={`
-        font-display text-2xl leading-tight
-        hover:underline
-      `} href={data.url}>
-        {data.name}
-      </a>
-    ) : (
-      <p className="font-display text-2xl leading-tight">{data.name}</p>
-    );
-  const stats = (
-    <p className="text-sm text-gray-500 mt-5">
-      {data.correct + (status === "correct" ? 1 : 0)} out of {data.guesses + 1}{" "}
-      people (
-      {percent(data.correct + (status === "correct" ? 1 : 0), data.guesses + 1)}
-      ) guessed this correctly
-    </p>
-  );
-  const marker = (
-    <div
-      className={`
-      h-full absolute w-2 left-0
-      ${!first ? "md:left-auto md:right-0" : ""}
-      ${inHistory && color === "green" ? "bg-green-300" : ""}
-      ${inHistory && color === "red" ? "bg-red-300" : ""}
-      `}
-    ></div>
-  );
-
-  return (
-    <div
-      className={`
-        relative
-        flex flex-col justify-center flex-1 py-6 px-4 pl-6
-        border-b-2 text-left
-        ${!inHistory ? "md:border-b-0 select-none" : ""}
-        ${!first ? "md:pl-4 md:pr-6" : ""}
-        ${!inHistory && color === "green" ? "bg-green-100" : ""}
-        ${!inHistory && color === "red" ? "bg-red-100" : ""}
-        ${!status ? "hover:bg-gray-100 cursor-pointer" : ""}
-      `}
-      disabled={!guess}
-      onClick={guess && ((e) => guess(real))}
-    >
-      {inHistory && source}
-      {name}
-      {inHistory && stats}
-      {inHistory && marker}
-    </div>
-  );
-};
-
-const Pair = ({ classes, guessed, guess }) => {
-  const btn = (real, first) => {
-    const key = real ? "real" : "fake";
-    return (
-      <ClassBtn
-        key={key}
-        data={classes[key]}
-        status={classes.status}
-        guess={guess}
-        real={real}
-        first={first}
-      />
-    );
-  };
-  const classElt = classes.real_first
-    ? [btn(true, true), btn(false, false)]
-    : [btn(false, true), btn(true, false)];
-  return (
-    <div
-      className={`
-        flex flex-col md:flex-row min-h-60 md:min-h-48
-        even:bg-white md:even:bg-transparent
-      `}
-    >
-      {classElt}
-    </div>
-  );
-};
+import { percent, post } from "./utils";
+import Pair from "./Pair";
 
 const Prompt = ({ pending, classes, pushHistory }) => {
   const [guessed, setGuessed] = useState(null);
@@ -136,7 +28,9 @@ const Prompt = ({ pending, classes, pushHistory }) => {
   return (
     <div className="max-w-3xl mx-auto md:pt-6">
       {pending ? (
-        <div className="flex flex-col justify-center text-center min-h-60 md:min-h-48">Loading…</div>
+        <div className="flex flex-col justify-center text-center min-h-60 md:min-h-48">
+          Loading…
+        </div>
       ) : (
         <Pair classes={classes} guessed={guessed} guess={guess} />
       )}
@@ -156,11 +50,7 @@ const Prompt = ({ pending, classes, pushHistory }) => {
 
 const History = ({ history }) => {
   return (
-    <div
-      className={`
-      flex flex-col
-    `}
-    >
+    <div className="flex flex-col">
       {history.map((classes, i) => (
         <Pair key={i} classes={classes} />
       ))}
@@ -191,7 +81,7 @@ const App = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen font-body">
-      <h1 className="bg-gray-900 text-gray-50 font-display text-xl text-center py-3">
+      <h1 className="bg-gray-900 py-3 text-gray-50 text-display text-xl text-center">
         Real or Fake?
       </h1>
       <div className="bg-white">
