@@ -95,11 +95,11 @@ def update_upvote(cur, rowid):
 
 if __name__ == "__main__":
     create_table()
-    with open("../data/realclasses.tsv") as f:
+    with open("../../data/realclasses.tsv") as f:
         reader = csv.reader(f, delimiter="\t")
         for row in reader:
             insert_real_class(row)
-    with open("../data/fakeclasses.tsv") as f:
+    with open("../../data/fakeclasses.tsv") as f:
         reader = csv.reader(f, delimiter="\t")
         for row in reader:
             insert_fake_class(row)
